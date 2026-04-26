@@ -13,6 +13,12 @@
 
 `pasteimg` 是一个 Claude Code Skill，安装后在 Claude Code 中输入 `/pasteimg`，即可自动读取剪贴板中的图片，调用视觉大模型分析并输出文字描述。
 
+### 为什么需要这个 Skill？
+
+> **DeepSeek V4 不是多模态模型，不支持图片识别。** 当你在 Claude Code 中粘贴截图、UI 设计稿、代码截图时，DeepSeek V4 无法理解图片内容。
+
+`pasteimg` 填补了这个空缺 — 它用 Gemini（或其他视觉大模型）来"看"图片，分析结果交给 DeepSeek V4 继续处理。两者互补，实现完整的图片理解工作流。
+
 ### 适用环境
 
 - **Claude Code** 已配置接入 **DeepSeek V4**（参考 [DeepSeek API 文档](https://api-docs.deepseek.com/zh-cn/guides/coding_agents)）
@@ -154,6 +160,12 @@ pasteimg/
 ### What is this?
 
 `pasteimg` is a Claude Code Skill. After installation, type `/pasteimg` in Claude Code to instantly capture the image from your clipboard, send it to a vision LLM, and get a detailed text description.
+
+### Why this Skill?
+
+> **DeepSeek V4 is not a multimodal model — it cannot process images.** When you paste screenshots, UI mockups, or code snippets into Claude Code, DeepSeek V4 simply cannot see them.
+
+`pasteimg` fills this gap — it uses Gemini (or any vision LLM of your choice) to "look" at images, then returns the analysis as text that DeepSeek V4 can continue working with. Together they form a complete image understanding workflow.
 
 ### Prerequisites
 
