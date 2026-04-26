@@ -21,6 +21,7 @@ import os
 import sys
 import json
 import base64
+import shutil
 import tempfile
 import subprocess
 import urllib.request
@@ -71,44 +72,14 @@ end try"""
             try:
                 os.rename("/tmp/_pasteimg_tmp.png", tmp)
             except OSError:
-                import shutil
                 shutil.copy("/tmp/_pasteimg_tmp.png", tmp)
             return tmp
         os.unlink(tmp)
         return None
 
-    # --- Linux X11 (xclip) ---
-    r = subprocess.run(
-        ["which", "xclip"], capture_output=True, timeout=5
-    )
-    if r.returncode == 0:
-        r = subprocess.run(
-            ["xclip", "-selection", "clipboard", "-t", "image/png", "-o"],
-            capture_output=True, timeout=10,
-        )
-        if r.returncode == 0 and len(r.stdout) > 100:
-            with open(tmp, "wb") as f:
-                f.write(r.stdout)
-            return tmp
-
-    # --- Linux Wayland (wl-paste) ---
-    r = subprocess.run(
-        ["which", "wl-paste"], capture_output=True, timeout=5
-    )
-    if r.returncode == 0:
-        r = subprocess.run(
-            ["wl-paste", "--type", "image/png"],
-            capture_output=True, timeout=10,
-        )
-        if r.returncode == 0 and len(r.stdout) > 100:
-            with open(tmp, "wb") as f:
-                f.write(r.stdout)
-            return tmp
-
-    # --- Windows / WSL (PowerShell) ---
+    # --- Windows / WSL (PowerShell) — check first, fastest path on WSL ---
     ps = "powershell.exe" if sys.platform == "linux" else "powershell"
-    r = subprocess.run(["which", ps], capture_output=True, timeout=5)
-    if r.returncode == 0:
+    if shutil.which(ps):
         win_tmp = f"claude_pasteimg_{os.getpid()}.png"
         cmd = (
             "Add-Type -AssemblyName System.Drawing;"
@@ -120,7 +91,7 @@ end try"""
         )
         r = subprocess.run(
             [ps, "-NoProfile", "-Command", cmd],
-            capture_output=True, text=True, timeout=15,
+            capture_output=True, text=True, timeout=10,
             encoding="utf-8", errors="replace",
         )
         if r.returncode == 0 and r.stdout.strip():
@@ -131,7 +102,6 @@ end try"""
                     win_path[3:].replace("\\", "/"),
                 )
                 if os.path.isfile(wsl_path):
-                    import shutil
                     shutil.copy(wsl_path, tmp)
                     try:
                         os.unlink(wsl_path)
@@ -139,9 +109,30 @@ end try"""
                         pass
                     return tmp
             elif os.path.isfile(win_path):
-                import shutil
                 shutil.copy(win_path, tmp)
                 return tmp
+
+    # --- Linux X11 (xclip) ---
+    if shutil.which("xclip"):
+        r = subprocess.run(
+            ["xclip", "-selection", "clipboard", "-t", "image/png", "-o"],
+            capture_output=True, timeout=5,
+        )
+        if r.returncode == 0 and len(r.stdout) > 100:
+            with open(tmp, "wb") as f:
+                f.write(r.stdout)
+            return tmp
+
+    # --- Linux Wayland (wl-paste) ---
+    if shutil.which("wl-paste"):
+        r = subprocess.run(
+            ["wl-paste", "--type", "image/png"],
+            capture_output=True, timeout=5,
+        )
+        if r.returncode == 0 and len(r.stdout) > 100:
+            with open(tmp, "wb") as f:
+                f.write(r.stdout)
+            return tmp
 
     os.unlink(tmp)
     return None

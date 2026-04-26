@@ -1,7 +1,7 @@
 # pasteimg — Claude Code Skill：剪贴板图片一键转文字
 
 > 一键分析剪贴板图片，适用于 Claude Code + DeepSeek V4 使用场景。
-> [English Docs](README.md)
+> [English Docs](README_EN.md)
 
 ## 这是什么？
 
@@ -141,7 +141,7 @@ Claude 全系模型（Opus 4.7 / Sonnet 4.6 / Haiku 4.5）均原生支持视觉�
 pasteimg/
   SKILL.md       # Claude Code Skill 定义文件
   pasteimg.py    # 核心脚本：剪贴板提取 + API 调用
-  README.md      # 英文文档
+  README_EN.md      # 英文文档
   README_CN.md   # 中文文档（本文件）
 ```
 
