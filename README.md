@@ -52,11 +52,11 @@ sudo apt install wl-clipboard # Wayland
 
 ### 切换视觉大模型
 
-默认使用 **Gemini 3.1 Pro**。以下列出三种主流多模态模型的切换方式：
+默认使用 **Gemini 3.1 Flash**。以下列出三种主流多模态模型的切换方式：
 
 | 方案 | 模型 | 厂商 | 需要 |
 |------|------|------|------|
-| 默认 | Gemini 3.1 Pro | Google | `GEMINI_API_KEY` |
+| 默认 | Gemini 3.1 Flash | Google | `GEMINI_API_KEY` |
 | 备选 A | GPT-5.4 | OpenAI | `OPENAI_API_KEY` |
 | 备选 B | Claude Sonnet 4.6 | Anthropic | `ANTHROPIC_API_KEY` |
 
@@ -200,11 +200,11 @@ Make sure you have an image in your clipboard first (`Win+Shift+S` / `Ctrl+C` / 
 
 ### Switching Vision Models
 
-Default model is **Gemini 3.1 Pro**. Here are three popular multimodal models you can switch to:
+Default model is **Gemini 3.1 Flash**. Here are three popular multimodal models you can switch to:
 
 | Option | Model | Provider | Requires |
 |--------|-------|----------|----------|
-| Default | Gemini 3.1 Pro | Google | `GEMINI_API_KEY` |
+| Default | Gemini 3.1 Flash | Google | `GEMINI_API_KEY` |
 | Option A | GPT-5.4 | OpenAI | `OPENAI_API_KEY` |
 | Option B | Claude Sonnet 4.6 | Anthropic | `ANTHROPIC_API_KEY` |
 

@@ -13,7 +13,7 @@ Platform clipboard tools (auto-detected):
   Windows: built-in (PowerShell)
 
 To swap the vision model: set GEMINI_MODEL env var,
-  e.g. export GEMINI_MODEL="gemini-3.1-pro-preview"
+  e.g. export GEMINI_MODEL="gemini-3.1-flash-preview"
   Or edit analyze() below to call a different API entirely.
 """
 
@@ -26,7 +26,7 @@ import subprocess
 import urllib.request
 import urllib.error
 
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-pro-preview")
+GEMINI_MODEL = os.environ.get("GEMINI_MODEL", "gemini-3.1-flash-preview")
 
 PROMPT = os.environ.get(
     "IMAGE_ANALYSIS_PROMPT",
