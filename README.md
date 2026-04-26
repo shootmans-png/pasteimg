@@ -11,7 +11,7 @@
 
 ### 这是什么？
 
-`pasteimg` 是一个 Claude Code Skill，安装后在 Claude Code 中输入 `/pasteimg`，即可自动读取剪贴板中的图片，调用 Gemini 多模态视觉模型分析并输出文字描述。
+`pasteimg` 是一个 Claude Code Skill，安装后在 Claude Code 中输入 `/pasteimg`，即可自动读取剪贴板中的图片，调用视觉大模型分析并输出文字描述。
 
 ### 适用环境
 
@@ -44,29 +44,107 @@ sudo apt install wl-clipboard # Wayland
 
 首次使用前，先复制一张图片到剪贴板（`Win+Shift+S` / `Ctrl+C` / `Cmd+Ctrl+Shift+4`）。
 
-### 自定义视觉模型
+### 切换视觉大模型
 
-默认使用 Gemini 3 Flash。如需更换：
+默认使用 **Gemini 3.1 Pro**。以下列出三种主流多模态模型的切换方式：
 
-```bash
-export GEMINI_MODEL="gemini-3.1-pro-preview"  # 换成 Pro 版
+| 方案 | 模型 | 厂商 | 需要 |
+|------|------|------|------|
+| 默认 | Gemini 3.1 Pro | Google | `GEMINI_API_KEY` |
+| 备选 A | GPT-5.4 | OpenAI | `OPENAI_API_KEY` |
+| 备选 B | Claude Sonnet 4.6 | Anthropic | `ANTHROPIC_API_KEY` |
+
+**方案 A — 切换为 GPT-5.4：**
+
+编辑 `pasteimg.py` 中的 `analyze_image()` 函数，替换为 OpenAI API 格式：
+
+```python
+def analyze_image(filepath, api_key):
+    import base64
+    with open(filepath, "rb") as f:
+        img_b64 = base64.b64encode(f.read()).decode("utf-8")
+
+    payload = json.dumps({
+        "model": "gpt-5.4",
+        "messages": [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": PROMPT},
+                {"type": "image_url", "image_url": {"url": f"data:image/png;base64,{img_b64}"}}
+            ]
+        }]
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://api.openai.com/v1/chat/completions",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {api_key}"
+        },
+        method="POST"
+    )
+    # ... 解析 response["choices"][0]["message"]["content"]
 ```
 
-或直接编辑 `pasteimg.py` 中的 `analyze_image()` 函数，对接 GPT-4V / Claude Vision 等任意多模态 API。
+使用时设置 `export OPENAI_API_KEY="sk-..."` 并调整 `main()` 中读取的 key。
+
+**方案 B — 切换为 Claude Sonnet 4.6：**
+
+```python
+def analyze_image(filepath, api_key):
+    import base64
+    with open(filepath, "rb") as f:
+        img_b64 = base64.b64encode(f.read()).decode("utf-8")
+    mime = "image/png"
+    if filepath.lower().endswith((".jpg", ".jpeg")):
+        mime = "image/jpeg"
+
+    payload = json.dumps({
+        "model": "claude-sonnet-4-6",
+        "max_tokens": 2048,
+        "messages": [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": PROMPT},
+                {"type": "image", "source": {
+                    "type": "base64",
+                    "media_type": mime,
+                    "data": img_b64
+                }}
+            ]
+        }]
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        "https://api.anthropic.com/v1/messages",
+        data=payload,
+        headers={
+            "Content-Type": "application/json",
+            "x-api-key": api_key,
+            "anthropic-version": "2023-06-01"
+        },
+        method="POST"
+    )
+    # ... 解析 response["content"][0]["text"]
+```
+
+Claude 全系模型（Opus 4.7 / Sonnet 4.6 / Haiku 4.5）均原生支持视觉输入，支持 PNG / JPEG / GIF / WebP 格式。
 
 ### 目录结构
 
 ```
 pasteimg/
   SKILL.md      # Claude Code Skill 定义文件
-  pasteimg.py   # 核心脚本：剪贴板提取 + Gemini API 调用
+  pasteimg.py   # 核心脚本：剪贴板提取 + API 调用
+  README.md     # 本文件
 ```
 
 ### 原理
 
 ```
 剪贴板图片 ──→ 平台工具提取 (xclip/wl-paste/osascript/PowerShell)
-              ──→ Base64 编码 ──→ Gemini API ──→ 文字描述输出
+              ──→ Base64 编码 ──→ 视觉大模型 API ──→ 文字描述输出
 ```
 
 ---
@@ -75,7 +153,7 @@ pasteimg/
 
 ### What is this?
 
-`pasteimg` is a Claude Code Skill. After installation, type `/pasteimg` in Claude Code to instantly capture the image from your clipboard, send it to the Gemini vision model, and get a detailed text description.
+`pasteimg` is a Claude Code Skill. After installation, type `/pasteimg` in Claude Code to instantly capture the image from your clipboard, send it to a vision LLM, and get a detailed text description.
 
 ### Prerequisites
 
@@ -108,29 +186,42 @@ In Claude Code, type:
 
 Make sure you have an image in your clipboard first (`Win+Shift+S` / `Ctrl+C` / `Cmd+Ctrl+Shift+4`).
 
-### Using a different vision model
+### Switching Vision Models
 
-Default model is Gemini 3 Flash. To change:
+Default model is **Gemini 3.1 Pro**. Here are three popular multimodal models you can switch to:
 
-```bash
-export GEMINI_MODEL="gemini-3.1-pro-preview"  # Upgrade to Pro
-```
+| Option | Model | Provider | Requires |
+|--------|-------|----------|----------|
+| Default | Gemini 3.1 Pro | Google | `GEMINI_API_KEY` |
+| Option A | GPT-5.4 | OpenAI | `OPENAI_API_KEY` |
+| Option B | Claude Sonnet 4.6 | Anthropic | `ANTHROPIC_API_KEY` |
 
-Or edit the `analyze_image()` function in `pasteimg.py` to call any multimodal API (GPT-4V, Claude Vision, etc.).
+**Option A — Switch to GPT-5.4:**
+
+Edit the `analyze_image()` function in `pasteimg.py` to use the OpenAI Chat Completions API format (see the code in the Chinese section above, or refer to [OpenAI Vision docs](https://platform.openai.com/docs/guides/vision)).
+
+Set `export OPENAI_API_KEY="sk-..."` and adjust `main()` accordingly.
+
+**Option B — Switch to Claude Sonnet 4.6:**
+
+Edit the `analyze_image()` function to use the Anthropic Messages API format. All Claude models (Opus 4.7 / Sonnet 4.6 / Haiku 4.5) natively support vision with PNG / JPEG / GIF / WebP formats. See the [Claude Vision docs](https://platform.claude.com/docs/en/docs/build-with-claude/vision) for details.
+
+Set `export ANTHROPIC_API_KEY="sk-ant-..."` and adjust `main()` accordingly.
 
 ### Structure
 
 ```
 pasteimg/
   SKILL.md      # Claude Code Skill definition
-  pasteimg.py   # Core script: clipboard extraction + Gemini API call
+  pasteimg.py   # Core script: clipboard extraction + API call
+  README.md     # This file
 ```
 
 ### How it works
 
 ```
 Clipboard Image ──→ Platform tool (xclip/wl-paste/osascript/PowerShell)
-                 ──→ Base64 Encode ──→ Gemini API ──→ Text Output
+                 ──→ Base64 Encode ──→ Vision LLM API ──→ Text Output
 ```
 
 ---
